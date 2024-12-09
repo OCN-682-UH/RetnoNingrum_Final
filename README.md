@@ -23,8 +23,8 @@ Using R as the platform to build this page streamlines the process of updating t
 |MIN                         |numerical |Minutes when the data were collected. |
 |Nest_Type                   |character |Type of crawls were recorded: Nest (successful nesting attempt, but did not meet the turtles), Nesting_Individu (successful nesting attempt, and meet the turtles), False_Crawks (unsuccessful nesting attempt). |
 |Nest_Disturbance            |character |Is the turtle nest disturbed? Secure (turtle nest is safe, undisturbed), Non_Nesting (associated with false crawls, non nesting activity), Lost (nest were lost due to illegal harvest), Predated (nest were predated by animals). |
-|Nest_Type                   |logical   |Is the country a hereditary monarchy? |
-|Nest_Type                   |logical   |Is the country a hereditary monarchy? |  
+|X                           |numerical |Latitude of the nest position coordinate |
+|Y                           |numerical |Longitude of the nest position coordinate |
 
 ### `turtle_sighting.csv`
 
