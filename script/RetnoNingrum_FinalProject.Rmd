@@ -1,0 +1,566 @@
+---
+output: 
+  cleanrmd::html_document_clean:
+    theme: axist
+    self_contained: true
+---
+
+::: {style="text-align: center; font-size: 60px; font-weight: bold; line-height: 1.2 "}
+Leatherback Turtle Project on Buru Island
+:::
+
+::: {style="text-align: center; font-size: 22px;"}
+Author: <br> Retno Kusuma Ningrum <br> Last update: December 2024
+:::
+
+::: {style="text-align: center; margin-top: 20px; margin-bottom: 20px"}
+Disclaimer : This website is created as part of the final project for **MBIO 612** (Data Science Fundamental in R). The data presented is curated by the author and is intended solely for the purpose of the MBIO 612 final project. **It should not be shared or distributed without permission**. Thank you for your cooperation.
+:::
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE,                 #do not display the code
+                      message = FALSE,              #do not show the message
+                      warning = FALSE,              #do not show the warning
+                      fig.path = "../output/")      #set the output for image
+```
+
+```{r}
+# Load all Libraries
+library(here)      #to use here function, patchwork
+library(ggplot2)   #to use ggplot for plotting
+library(dplyr)     #to tidy up data
+library(tidyverse) #to tidy up data
+library(leaflet)   #to use map
+library(gridExtra) #to let bar plot side by side in one row
+library(gganimate) #to use the animation effect
+library(ggmap)     #for mapping
+library(grid)      #to add annotation
+library(geomtextpath) #to add text within the line
+```
+
+```{r}
+#Read the data
+df_1<- read_csv(here("data", "turtle_sighting.csv"))
+df_2<- read_csv(here("data", "when_sighting.csv"))
+df<- read_csv(here( "data", "monitoring.csv"))
+```
+
+::: {style="text-align: center; font-size: 30px;font-weight: bold; margin-bottom: 20px"}
+Project Location
+:::
+
+```{r map_loc, fig.width= 9, fig.height= 6}
+
+#create legend text inside the leaflet map using html language
+legend <- "
+<style>
+  .custom-legend {                               
+    background-color: rgba(255, 255, 255, 0.8);  
+    padding: 10px;                               
+    font-size: 16px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    transition: background-color 0.3s, transform 0.3s;
+    width: 300px;
+  }
+  .custom-legend:hover {
+    background-color: rgba(255, 255, 255, 0.9);
+    transform: scale(1.05);
+  }
+</style>
+<div>
+ <p>
+     <a href='https://en.wikipedia.org/wiki/Buru' target='_blank'>Buru Island</a> is the third largest island within the Maluku Islands of Indonesia. It lies between the Banda Sea to the south and Seram Sea to the north, west of Ambon and Seram islands. This island is located approximately 650 km southwest of Jamursba Medi and Wermon beach in West Papua, which are known as the largest Pacific leatherback population rookeries. 
+  </p>
+</div>"
+
+# Create the map
+leaflet() %>%        #use leaflet function
+   addTiles() %>%    #add a tile layer to the map
+   setView( lng = 126.60937 , lat = -3.06195, zoom = 3 ) %>% #set the initial view based on these coordinate 
+   addProviderTiles("Esri.WorldImagery") %>% #use the esti type of map
+  addMarkers(        #add a marker following these coordinate
+    lng = 126.60937,  
+    lat = -3.06195, 
+    popup = "Project Location : Fena Leisela Subdistrict") %>%  #add a popup text 
+  addControl(html = legend,               #add the legend html created above
+             position = "topright",       #place it on top right
+             className = "custom-legend") #using set of class code from custom-legend function created above
+```
+
+::: {style="text-align: justify; font-size: 20px; margin-top: 20px; margin-bottom: 20px"}
+Buru Island, Maluku, Indonesia was chosen as the area of interest due to the information about the existence of turtles and the utilization of turtles in this region. Therefore, the WWF Indonesia team conducted preliminary studies in 2016 by interviewing 12 key informants who were local community members and customary leaders. The purpose of the preliminary survey was to understand the situation and condition of the area of interest, as well as to approach the local community.
+:::
+
+```{r interview_result, fig.width= 14, fig.height= 4, fig.align='center'}
+
+
+species <- ggplot(df_1,                           #create plot named species, using data df_1
+                  aes(x = species,                #assign x axis as species
+                            y = total))+          #assign y axis as total
+                  geom_bar(stat = "identity",     #use geom bar with stat type of identity
+                           fill = "turquoise4") + #adjust the bar color
+  #rename the x category
+  scale_x_discrete(labels = c(
+    "green_turtle" = "Green Turtle",
+    "hawksbil_turtle" = "Hawksbill Turtle",
+    "olive_ridley" = "Olive Ridley",
+    "flatback_turtle" = "Flatback Turtle",
+    "leatherback" = "Leatherback"
+  )) +
+  #adjust the x and y axis text/label
+  labs(x = "", y = "#key informants encounter turtles") + 
+  #add annotation 
+  annotate("text",   #use the text type
+           x= 1.5,   #set the horizontal position
+           y = 9.5,  #set the vertical position
+           label = "n=12",  #put the text/label 
+           size = 5,        #adjust the size
+           alpha = 0.5) +   #adjust the transparency
+  theme_minimal()    #use theme minimal
+
+when <- ggplot(df_2,                #create plot named species, using data df_2 
+               aes(x =when,         #assign x axis data
+                   y = total))+     #assign y axis data
+                  geom_bar(stat = "identity",    #add geom bar, using identity type of stat
+                           fill = "steelblue") + #adjust the bar color
+  #rename the x label
+  scale_x_discrete(labels = c(
+    "fishing" = "Fishing",
+    "nesting" = "Nesting",
+    "hunting" = "Hunting",
+    "sanctuary" = "Captivity",
+    "fishing_trip" = "Fishing Trip",
+    "stranded" = "Stranded on Beach"
+  )) +
+  #adjust the x and y axis text/label
+  labs(x = "", y = "#key informants encounter turtles") +
+  #add annotation 
+ annotate("text",   #use the text type
+           x= 1.5,   #set the horizontal position
+           y = 9.5,  #set the vertical position
+           label = "n=12",  #put the text/label 
+           size = 5,        #adjust the size
+           alpha = 0.5) +   #adjust the transparency
+  theme_minimal() #use this theme
+
+#Create annotation (the source of the data)
+source_text <- textGrob(
+  "Plot 1. Sea Turtles Sighting Report from Interview Survey", 
+  gp = gpar(fontsize = 14, fontface = "italic"),  #Adjust Font size and style
+  hjust = 0.5,                                    #Center the text horizontally
+  x = 0.5                                         #Position it in the center
+)
+
+#now arrange all the plots
+grid.arrange(
+  #set up layout, first row
+  arrangeGrob(species, when, nrow = 1),      #set the position, and total row
+  source_text,                               #add source_text in the second row
+  nrow = 2,                                  #set up total row 2 
+  heights = c(10,1))                         #adjust heights in first main row 10, and second row is 1
+```
+
+::: {style="text-align: justify; font-size: 20px; margin-top: 20px; margin-bottom: 20px"}
+The key informant survey revealed that leatherback turtles and hawksbill turtles are the turtle species most commonly encountered. The majority of important informants saw turtles when driving to fishing spots, during fishing activities, and when turtles were nesting on beaches. Some key informants also stated that there are ongoing activities relating to the use of turtles and turtle eggs. WWF Indonesia became aware of the situation and performed rigorous monitoring in the area of concern, which was suspected of being a nesting hotspot, throughout 2017. The goal of this activity was to establish the level of turtle and/or turtle egg hunting, as well as the number of nesting activities, specifically for leatherback turtles.
+:::
+
+```{r nest_2017, fig.width= 9, fig.height= 6}
+#Create map of nest distribution in 2017
+#filter data using only 2017
+nest_2017 <- df %>%        #create new data frame, from df
+  filter(YYYY == "2017")   #filter in YYYY only 2017
+
+# create the custom legen using html language
+title <- "
+<style>
+  .custom-legend2 {
+ position: absolute;
+    top: 40px;                     /* Distance from the top of the map */
+    left: 700%;                    /* Center horizontally */
+    transform: translateX(-20%);   /* Adjust alignment */
+    background-color: rgba(255, 255, 255, 0.8); /* Adjust color background */
+    padding: 10px;                /* Adjust the padding size */
+    border-radius: 20px;          /* Adjust the radius  */
+    border: 1px solid #ddd;       /* Adjust the border line */
+    font-weight: bold;            /* Adjust alignment */
+    font-size: 20px;              /* Adjust the size */
+    text-align: center;           /* Adjust alignment  */
+    width: 500px;
+  }
+</style>
+<div>
+Leatherback Turtle Nesting Distribution in 2017 
+</div>"
+
+#Create map using leaflet function
+leaflet_map <- leaflet(data = nest_2017) %>%  #create leaflet_map using data only 2017
+  addTiles() %>%                  #add a tile layer to the map
+  addCircles(~X, ~Y,              #add circle point based on each X and Y
+             radius = 1) %>%      #set the radius between point/circle
+  #Add marker point location
+  addMarkers(
+    lng = 126.6203250,             #set the longitude of the point
+    lat = -3.0696625,              #set the latitude of the point
+    popup = "Waenibe Village") %>% #add pop up text of waenibe village
+  #Add another marker point location
+  addMarkers(                      
+    lng = 126.5488486,             #set the longitude of the point
+    lat = -3.0723009,              #set the latitude of the point
+    popup = "Wamlana Village") %>% #add pop up text of wamlana village
+  #Add another marker point location
+  addMarkers(
+    lng = 126.5665672,             #set the longitude of the point
+    lat = -3.0722366,              #set the latitude of the point
+    popup = "Waspait Village") %>% #add pop up text of wamlana village
+  addControl(html = title,                   #add the legend html created above
+             position = "topleft",           #place it on top right
+             className = "custom-legend2")   #using set of class code from custom-legend function created above
+
+#recall the map
+leaflet_map
+```
+
+::: {style="text-align: justify; font-size: 20px; margin-top: 20px; margin-bottom: 20px"}
+The 2017 monitoring activities identified coastal areas with significant leatherback turtle nesting activity, referred to as **Nesting Hotspots**. These hotspots were located in three villages: Waenibe, Wamlana, and Waspait. Leatherback turtles on this beach nest consistently throughout the year, with peak nesting activity occurring in July and February. Given Indonesia's seasonal patterns, it is suggested that the number of nesting events may vary with the seasons. The dry season typically spans from April to October, while the rainy season lasts from November to March.
+:::
+
+```{r condition_2017,  fig.width= 12, fig.height= 4, fig.align= 'center'}
+## Total of Illegal Harvest and Predation in 2017
+
+#filter the data
+onlynest_2017 <- nest_2017 %>%
+  filter(Nest_Type %in% c("Nest", "Nesting_Individu")) %>%  #filter by successful nesting attempt
+  group_by(MM, Nest_Disturbance) %>%                        #group by month and nest disturbance
+  summarise(total = n())                                    #summarize and place it in new column "total" 
+
+
+onlynest_2017$MM <- factor(onlynest_2017$MM, levels =  1:12) #factorize and levellize the data in MM
+
+#create the plot
+nest_condition <- ggplot(onlynest_2017,                      #add ggplot using onlynest_2017 data
+                         aes(x = factor(MM, levels = 1:12),  #assign x value and factorize the value and assign leveling
+                             y = total,                      #assign y value
+                             fill = Nest_Disturbance))+      #assign fill color representing the nest disturbance
+                  geom_bar(stat = "identity", position = "fill") +  #set the geom bar
+  #rename the x axis categories
+  scale_x_discrete(labels = c(
+    "1" = "Jan",
+    "2" = "Feb",
+    "3" = "Mar",
+    "4" = "Apr",
+    "5" = "May",
+    "6" = "Jun",
+    "7" = "Jul",
+    "8" = "Aug",
+    "9" = "Sep",
+    "10" = "Oct",
+    "11" = "Nov",
+    "12" = "Dec"
+  )) +
+  #set the color fill manually
+  scale_fill_manual(values = c("Lost" = "brown1","Predated" = "darkkhaki", "Secure" = "steelblue")) +
+  labs( title = "Leatherback Turtle Nests Condition in 2017",  #assign the title text
+    y = "Proportion",                                          #assign the y axis label
+    x = "",                                                    #do not add any label text in x axis
+    fill = "") +                                               #do not add any legend text in color fill
+    theme_minimal() + #use this theme
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold"),  #adjust the position of the title, and bold it
+    legend.position = "top" )                               #adjust the position of the legend on top
+
+#create new dataset, monthly nest in 2017
+monthly_2017 <- nest_2017 %>%
+  filter(Nest_Type %in% c("Nest", "Nesting_Individu")) %>%   #filter by the successful nesting attempt
+  group_by(YYYY, MM)%>%                                      #group by month and year
+  summarise( total = sum(n()))                               #summarize and add into new column "total".
+
+#create the plot
+total_nest <- ggplot(monthly_2017, 
+                     aes(x = factor(MM, levels = 1:12),      #assign x axis
+                         y = total))+                        #assign y axis
+                  geom_bar(stat = "identity", fill = "steelblue") +  #set the geom bar
+  #rename the x axis categories
+  scale_x_discrete(labels = c(
+    "1" = "Jan",
+    "2" = "Feb",
+    "3" = "Mar",
+    "4" = "Apr",
+    "5" = "May",
+    "6" = "Jun",
+    "7" = "Jul",
+    "8" = "Aug",
+    "9" = "Sep",
+    "10" = "Oct",
+    "11" = "Nov",
+    "12" = "Dec"
+  ))  +
+  labs(
+    title = "Leatherback Turtle Nests in 2017",  #add title
+    y = "#Nests",                                #add y label
+    x = "") +                                    #do not add any text in x label
+    theme_minimal() +    #use this theme
+  theme(
+    plot.title = element_text(hjust = 0.5, face = "bold")  #set the position of the title and bold it
+  )
+
+#now arrange all the plots
+grid.arrange(arrangeGrob(total_nest, nest_condition, nrow = 1),#total_nest plot on left, nest_condition on right, in one row 
+  nrow = 1)                                                    #set up total row 1
+
+```
+
+::: {style="text-align: justify; font-size: 20px; margin-top: 20px; margin-bottom: 20px"}
+In 2017, a significant number of leatherback turtle nests were lost due to illegal harvesting, particularly during the initial months of monitoring when awareness about the protected status of leatherback turtles and their eggs was low. Over time, the number of lost nests gradually declined, likely due to increased community awareness of beach patrol activities. These patrols frequently issued warnings and educated locals about the importance of protecting nesting turtles and their eggs. The positive impact of reduced nest loss has reinforced the need for continued monitoring efforts, which aim to boost hatchling production in the nesting areas of the Fena Leisela sub-district. Alongside these efforts, data collection on nest ecology has been conducted to better understand the nesting characteristics of leatherback turtles on Buru Island.
+:::
+
+```{r distirbution_map, fig.width= 12, fig.height= 6}
+#remove all NA in X and Y column
+df_clean <- df %>%
+  drop_na(X,Y)
+  
+# Register Google API Key (you need a valid API key for Google Maps)
+#register_google(key = "your key here")
+
+# Define the location and zoom level
+sat_map <- get_map(location = c(left = 126.5156464, right = 126.6273079 , bottom = -3.0970742, top = -3.0564145), zoom = 12, maptype = "satellite")
+
+# Plot the map
+ggmap(sat_map) +
+  geom_point(data = df_clean,       #add point from df_clean
+             aes(x= X , y= Y),      #set the lat and long
+             size = 1, alpha = 0.5, #adjust the size, and transparency
+             color = "yellow") +    #set the color
+  labs(title = "Annual Distribution of Leatherback Turtle Nest on Buru Island",  #add title 
+       subtitle = "Year: {closest_state}") +                                     #add subtitle, adjusting with the transition
+  theme_minimal()+                                                               #use this theme
+  theme(
+    plot.title = element_text(hjust = 0.5,                #set the position of title : center
+                              face = "bold",              #bold the title
+                              size = 16,                  #set the size of title
+                              margin = margin(b = 10)),   #adjust the margin
+    plot.subtitle = element_text(hjust = 0.5,             #set the position of subtitle : center
+                                 size = 13)) +            #set the size of subtitle
+  #set the y/x aspect ratio
+  coord_fixed(ratio = 4/10) +       
+  #add the transition based on year, adjust the length of transition
+  transition_states(YYYY, transition_length = 1) 
+```
+
+::: {style="text-align: center; font-weight: bold; font-size: 18px"}
+Total Nests and False Crawls from 2017 to 2023
+:::
+
+```{r nest_falsecrawls, fig.width= 12, fig.height= 5}
+monthly_all <- df %>%  #create new data named monthly_all
+  #mutate data by renaming the nesting_individu
+  mutate(Nest_Type = recode(Nest_Type, "Nesting_Individu" = "Nest")) %>%
+  #mutate data 
+  mutate(MM = recode(MM, "1" = "JAN", "2"= "FEB", "3"="MAR", "4"="APR", "5" = "MAY", "6"="JUN", "7" = "JUL", "8"="AUG", "9"="SEP", "10"= "OCT", "11"="NOV", "12"="DEC")) %>%
+  group_by(YYYY, MM, Nest_Type)%>%
+  summarise( total = sum(n()))
+
+#Now I want to fill the unmentioned month and year with "0" value in total
+#step 1. I need to create all possible combinations of the data and named the dataset as "expected_data"
+expected_data <- expand.grid(    #create a dataframe from all combination of these vectors
+  YYYY = 2020:2023 ,             #fiscal_year from 2020 to 2024
+  MM = toupper(month.abb),       #month_abbv using abbreviation month with uppercase 
+  Nest_Type = c("Nest", "False_Crawls"), #encounter type using these 3 categories
+  total = NA)                            #total, fill all with NA value
+
+# Step 2: Now I need to merge the expected combinations with the actual data
+full_data <- expected_data %>%  #create new dataset "full_data" using expected_data
+  full_join(monthly_all,        #then full_join with monthly_report
+            by = c("YYYY",      #by following these column
+                   "MM", 
+                   "Nest_Type")) %>%
+  select(-total.x) %>%                  #then, remove total.x column
+  mutate(total = ifelse(is.na(total.y), #replace NA values in "total.y" with 0, and name the column as "total"
+                        0, total.y)) %>% 
+  select(- total.y)                     #then, remove total.y column as we don't need it again
+
+# Step 3: Ensure months are converted to numeric values and create a continuous timeline
+full_data <- full_data %>%
+  mutate(                    #mutate by creating new column named MM_numeric
+    MM_numeric = case_when(  #assign the month abbreviation based on the number in MM
+      MM == "JAN" ~ 1,
+      MM == "FEB" ~ 2,
+      MM == "MAR" ~ 3,
+      MM == "APR" ~ 4,
+      MM == "MAY" ~ 5,
+      MM == "JUN" ~ 6,
+      MM == "JUL" ~ 7,
+      MM == "AUG" ~ 8,
+      MM == "SEP" ~ 9,
+      MM == "OCT" ~ 10,
+      MM == "NOV" ~ 11,
+      MM == "DEC" ~ 12
+    ),
+    Time = YYYY + (MM_numeric - 1) / 12 #Continuous time variable
+  )%>%
+  arrange(Time)    #arrange the time 
+
+
+# Step 3: Create the animated line chart
+ggplot(full_data, aes(x = Time,             #create ggplot from full_data, x is time
+                      y = total,            #y is total
+                      color = Nest_Type)) + #fill color by nest_type
+  geom_line(size = 1) +       #add geom line, size is 1
+  geom_point(size = 3) +      #add geom point, size is 3
+  #scale color manually
+  scale_color_manual(values = c("Nest" = "blue4", "False_Crawls" = "darkred"),
+                     labels = c("False_Crawls" = "False Crawls")) + #adjust the name
+  labs(y = "Count") +   #adjust the text in y label
+  theme_minimal() +     #use this theme
+  theme(axis.text.x = element_text(hjust = 1),  #adjust the x text position
+        axis.title.x = element_blank(),         #do not add x title
+        plot.title = element_blank(),           #do not add plot title
+        legend.position = "top",                #place the legend position on top
+        legend.text = element_text(size = 12),  #adjust the legend size
+        legend.title = element_blank()) +       #do not add legend title
+  transition_reveal(Time)                       #add transition by the time
+
+```
+
+::: {style="text-align: justify; font-size: 20px; margin-top: 20px; margin-bottom: 20px"}
+The number of leatherback turtles nesting on Fena Leisela Nesting Beach fluctuates greatly between 2017 and 2023. Leatherback turtle nesting activities peaked in 2020 and 2023. While 2019 was the year with the fewest instances of leatherback turtle nesting activity. This could be related to the leatherback turtle's migration behavior, which may takes over two years.
+:::
+
+```{r, fig.width= 5, fig.height= 5, fig.align= 'center'}
+#Now I want to see the nesting trend between dry and rainy season from 2017 to 2023
+#first, I need to do the data manipulation
+
+seasonal_nest <- df %>%  #create new sataset named seasonal nest
+  mutate(Nest_Type = recode(Nest_Type, "Nesting_Individu" = "Nest")) %>% #change the name in each category
+  select(MM, YYYY, Nest_Type) %>%  #select only these column
+  group_by(MM,YYYY,Nest_Type) %>%  #group the data by these column
+  summarise(total = sum(n())) %>%  #summarise all the data 
+  #rename the month
+  mutate(MM = recode(MM, "1" = "JAN", "2"= "FEB", "3"="MAR", "4"="APR", "5" = "MAY", "6"="JUN", "7" = "JUL", "8"="AUG", "9"="SEP", "10"= "OCT", "11"="NOV", "12"="DEC")) %>%
+  #create new column of season using mutate
+  mutate(
+    season = case_when(
+      MM %in% c("APR", "MAY", "JUN", "JUL", "AUG", "SEP") ~ "dry",
+      MM %in% c("OCT", "NOV", "DEC", "JAN", "FEB", "MAR") ~ "rain"))
+
+#factorize the month
+seasonal_nest$MM <- as.factor(seasonal_nest$MM)
+
+#create the plot to visualize the trend
+ggplot(seasonal_nest,                      #use the full data
+                aes(x = YYYY,              #assign x with fiscal_year
+                    y = total,             #assign y with total
+                    color = Nest_Type)) +  #colorized by encounter_type
+  geom_jitter() +                          #add point by using geom_jitter
+  facet_wrap( ~ season) +                  #faceted by title_of authority
+  geom_labelsmooth(aes(label = Nest_Type), #add label within the linear smooth by encounter_type
+                   fill = "white",              #add fill color white
+                method = "lm", formula = y ~ x, #put the linear model with the formula
+                size = 3, linewidth = 1,        #set the font size of label and line width of linear model       
+                boxlinewidth = 0.4) +           #set the boxlinewidth
+  scale_color_manual(values = c(    #adjust the color manually
+    "Nest" = "blue4",    
+    "False_Crawls" = "red")) +
+  theme_bw() +                      #use this theme
+  guides(color = 'none') +          #remove legend
+  labs(
+    title = "Leatherback Turtles Nesting Activity Trend",  #set the title
+    subtitle = " 2017 - 2023",                          #set subtitle
+    y = "Number of Encounter") +                        #set y axis caption
+  theme(
+    plot.title = element_text(hjust = 0.5,           #for title, put in the center alignment
+                              face = "bold",         #then bold the title
+                              size = 12),            #then set the size
+    plot.subtitle = element_text(hjust = 0.5,        #for subtitle, put in the center alignment
+                              face = "bold",         #then bold the title
+                              size = 11,             #then set the size
+                              margin = margin(b=20)),#add margin between title to plot
+     axis.title.x = element_blank())                 #do not add any words in y axis
+
+```
+
+::: {style="text-align: justify; font-size: 20px; margin-top: 20px; margin-bottom: 20px"}
+The nesting patterns of leatherback turtles varied between the dry and rainy seasons. Nesting and non-nesting activities throughout the dry season increased from 2017 to 2023. However, a distinct tendency emerges during the wet season, characterized by a decline in nests and an increase in false crawls. This occurrence appears to be influenced by the wet season, which may disrupt nesting activities. Notably, the rainy season produces larger waves, resulting in reduced beach width and an increased likelihood of inundation, which creates unfavorable nesting conditions for leatherback turtles. The rising incidence of false crawls may indicate that leatherback turtles are reacting to suboptimal nesting sites by ceasing their nesting activities.
+:::
+
+```{r, fig.width= 10, fig.height= 3, fig.align= 'center'}
+### Now I want to visualize total nests that were illegaly harvested and predated
+
+condition_all <- df %>% #create new dataset named condition_all
+  filter(Nest_Type %in% c("Nest", "Nesting_Individu")) %>%  #filter these data
+  group_by(YYYY,Nest_Disturbance) %>%                       #group by these column
+  summarise(total = sum(n()))                               #create new column by summing all the row data
+
+# Make a ggplot, but add frame=year: one image per year
+ggplot(condition_all,          #use the condition data
+       aes(x=Nest_Disturbance, #assign x value
+           y=total,            #assign y value
+           fill=Nest_Disturbance)) +  #assign fill by nest disturbance
+  geom_bar(stat='identity') +  #add geom bar
+  theme_bw() +  #use this theme
+  scale_fill_manual( values =                      #Assign colors in fill
+                       c("Lost" = "darkred",       #male is blue
+                         "Predated" = "darkcyan",     #female is pink
+                         "Secure" = "deepskyblue3")) + #unknown is grey
+    labs(y = "Count",                                           #add label in y axis
+    title = "Leatherback Turtle Nests Condition",               #add title
+    subtitle = "Year: {round(frame_time)}") +                   #add subtitle 
+  theme_minimal() +                                             #use this theme type
+  theme(
+    plot.title = element_text(size = 12, face = "bold", hjust = 0.5), #setting the size, location of title
+    plot.subtitle = element_text(size = 11, hjust = 0.5),  #setting the size, location of subtitle
+    plot.caption = element_text(size = 8, hjust = 1),   #setting the size, location of caption
+    legend.position = "none",  #do not add any legend, as color in bar is obvious
+    axis.title.x = element_blank()) +                
+  transition_time(YYYY) +   #add transition by year
+  ease_aes('sine-in-out')   #choose this type of animation of transition
+
+```
+
+```{r, fig.width= 10, fig.height= 3, fig.align= 'center'}
+mm_condition_all <- df %>%            #create new data set named mm_condition_all
+  filter(Nest_Type %in% c("Nest", "Nesting_Individu")) %>% #filter the data
+  group_by(YYYY,MM, Nest_Disturbance) %>%  #group by these category
+  summarise(total = sum(n()))              #create new column "total" by calculating the total in n row
+
+mm_condition_all$YYYY <- as.factor(mm_condition_all$YYYY)   #factorize the data in YYYY
+
+#create the plot to visualize the trend
+ggplot(mm_condition_all,                      #use the full data
+                aes(x = YYYY,            #assign x with fiscal_year
+                    y = total,                  #assign y with total
+                    fill = Nest_Disturbance)) +  #colorized by encounter_type
+  facet_wrap(~ Nest_Disturbance) +
+  geom_boxplot( alpha = 0.5) + 
+  geom_jitter(color = "black", size = 0.4, alpha = 0.5) + #add point by using geom_jitter
+  scale_fill_manual(values = c(    #adjust the color manually
+    "Lost" = "darkred",           #male is blue
+    "Predated" = "darkcyan",     #female is pink
+    "Secure" = "deepskyblue3")) +
+  theme_minimal() +                              #use this theme
+ labs (
+    title = "Leatherback Turtle Nests Status",    #set the title
+    subtitle = " 2017 - 2023",                          #set subtitle
+    y = "Count") +                                      #set y axis caption
+  theme(
+    plot.title = element_text(hjust = 0.5,           #for title, put in the center alignment
+                              face = "bold",         #then bold the title
+                              size = 12),            #then set the size
+    plot.subtitle = element_text(hjust = 0.5,        #for subtitle, put in the center alignment
+                              face = "bold",         #then bold the title
+                              size = 11,             #then set the size
+                              margin = margin(b=20)),#add margin between title to plot
+     axis.title.x = element_blank(),                 #do not add any words in y axis
+    legend.position = "none",                        #do not add any legend
+    legend.title = element_blank())                  #do not add any title in the legend
+
+
+```
+
+::: {style="text-align: justify; font-size: 20px; margin-top: 20px; margin-bottom: 20px"}
+In term of the nests condition (whether it is safe, unlawfully taken, or predated), the safe nests were substantially increased since 2017 to date. This occurs as a result of the rigorous and continuous monitoring program. The local enumerator monitored the beach twice daily, nearly every day, from 2017 to 2023. They not only safeguarded the beach, but the presence of the local enumerator also heightened community knowledge regarding the protection of leatherback turtle nests and the preservation of their nesting process.
+:::
+
+```{r, fig.align= 'center'}
+knitr::include_graphics(here("data", "PictureFromField.jpg"))  #add figures from this path
+```
