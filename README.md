@@ -2,6 +2,8 @@
 ### Author: Retno Kusuma Ningrum
 
 Welcome to the repository for my Final Project in OCN 682. This project utilizes data from my previous work with WWF Indonesia, specifically from the Leatherback Turtle Conservation Project on Buru Island, Indonesia.
+![image](https://github.com/user-attachments/assets/ebba634d-c12a-43df-935b-c9b83001b405)
+
 
 ## Purpose  
 The primary goal of this project is to create a comprehensive webpage that narrates the story of the Leatherback Turtle Conservation Project. It will cover everything from the preliminary study to the current impacts and updates.
